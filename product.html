@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body{
+            margin:0;
+            font-family:Arial,sans-serif;
+            background:#004170;
+        }
+
+        .controls{
+            text-align:center;
+            padding:20px;
+        }
+
+        #search,#filter{
+            padding:10px;
+            margin:10px;
+            border-radius:5px;
+            border:none;
+            width:200px;
+        }
+
+        #container{
+            display:grid;
+            grid-template-columns:repeat(2,450px);
+            justify-content:center;
+            gap:20px;
+        }
+
+        .product{
+            padding:25px;
+            display:flex;
+            align-items:center;
+            border:2px solid rgb(101,110,236);
+            border-radius:6px;
+            background:white;
+        }
+
+        .details{
+            flex:1;
+        }
+
+        .title{
+            font-size:20px;
+            font-weight:bold;
+            margin-bottom:10px;
+        }
+
+        .price{
+            margin-bottom:10px;
+        }
+
+        .image{
+            width:120px;
+            height:120px;
+            object-fit:cover;
+        }
+
+        .btn{
+            padding:8px 15px;
+            border:none;
+            border-radius:5px;
+            background:#2563eb;
+            color:white;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Search Product">
+
+    <select id="filter">
+        <option value="all">All Categories</option>
+    </select>
+</div>
+
+<template id="productTemplate">
+    <div class="product">
+        <div class="details">
+            <div class="title"></div>
+            <div class="price"></div>
+            <button class="btn">Buy Now</button>
+        </div>
+        <img class="image">
+    </div>
+</template>
+
+<div id="container"></div>
+
+<script>
+
+let allProducts = [];
+
+async function fetchProducts(){
+
+    let response = await fetch("https://dummyjson.com/products");
+    let data = await response.json();
+
+    allProducts = data.products;
+
+    loadCategories();
+    displayProducts(allProducts);
+}
+
+function loadCategories(){
+
+    let categories = [...new Set(allProducts.map(p => p.category))];
+
+    let filter = document.getElementById("filter");
+
+    categories.forEach(cat=>{
+        filter.innerHTML +=
+        `<option value="${cat}">${cat}</option>`;
+    });
+}
+
+function displayProducts(products){
+
+    const container = document.getElementById("container");
+    const template = document.getElementById("productTemplate");
+
+    container.innerHTML = "";
+
+    products.forEach(x=>{
+
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector(".title").textContent = x.title;
+        clone.querySelector(".price").textContent =
+        "Price: $" + x.price;
+
+        clone.querySelector(".image").src = x.thumbnail;
+
+        clone.querySelector(".btn").onclick = function(){
+            window.location.href =
+            "product1.html?id=" + x.id;
+        };
+
+        container.appendChild(clone);
+    });
+}
+
+document.getElementById("search").addEventListener("input", applyFilter);
+
+document.getElementById("filter").addEventListener("change", applyFilter);
+
+function applyFilter(){
+
+    let searchText =
+    document.getElementById("search").value.toLowerCase();
+
+    let category =
+    document.getElementById("filter").value;
+
+    let filtered = allProducts.filter(product => {
+
+        let matchSearch =
+        product.title.toLowerCase().includes(searchText);
+
+        let matchCategory =
+        category === "all" ||
+        product.category === category;
+
+        return matchSearch && matchCategory;
+    });
+
+    displayProducts(filtered);
+}
+
+fetchProducts();
+
+</script>
+
+</body>
+</html>
